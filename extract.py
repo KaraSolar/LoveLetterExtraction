@@ -53,6 +53,10 @@ if not results:
 
 column_names = [desc[0] for desc in cur.description]
 df = pd.DataFrame(results, columns=column_names)
+df = df.astype(str) # fast parquet does not have explicit schema definition, 
+ # therefore I need to ensure that all of the parquet files in bucket will be the same data types every time.
+ # Pyarrow is not an option bc the version before 14.0 has a major security concern that allows remote code execution.
+ # There are not wheels for pyarrow for raspberry pi and even less for rpi 3 32 bits.
 
 cur.close()
 con.close()
