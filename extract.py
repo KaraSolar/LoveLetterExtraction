@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 import sqlite3
 import socket
-import pyarrow as pa
-import pyarrow.parquet as pq
+import pandas as pd
+from fastparquet import write
 from google.cloud import storage
 import os
 import glob
@@ -51,42 +51,19 @@ if not results:
     # log
     raise ValueError("No data found.")
 
+column_names = [desc[0] for desc in cur.description]
+df = pd.DataFrame(results, columns=column_names)
+
 cur.close()
 con.close()
 
 
-schema = pa.schema([
-    ('Boat', pa.string()),
-    ('telemetryId', pa.int64()),
-    ('telemetryTimeStamp', pa.string()),  # Change the schema to date type
-    ('tripId', pa.int64()),
-    ('telemetryBatteryVoltageSystem', pa.float64()),
-    ('telemetryBatteryCurrentSystem', pa.float64()),
-    ('telemetryBatteryPowerSystem', pa.int64()),
-    ('telemetryBatteryStateOfChargeSystem', pa.int64()),
-    ('telemetryPVDCCoupledPower', pa.int64()),
-    ('telemetryPVDCCoupledCurrent', pa.float64()),
-    ('telemetryLatitude1', pa.int64()),
-    ('telemetryLatitude2', pa.int64()),
-    ('telemetryLongitude1', pa.int64()),
-    ('telemetryLongitude2', pa.int64()),
-    ('telemetryCourse', pa.int64()),
-    ('telemetrySpeed', pa.float64()),
-    ('telemetryGPSFix', pa.int64()),
-    ('telemetryGPSNumberOfSatellites', pa.int64()),
-    ('telemetryAltitude1', pa.int64()),
-    ('telemetryAltitude2', pa.int64()),
-    ('tripPassengerQty', pa.int64())
-])
-
-table = pa.Table.from_pydict({cur.description[i][0]: [row[i] for row in results] for i in range(len(cur.description))}, schema=schema)
-
 local_file_path = "extracted_files/" + yesterday_date + "telemetry_data.parquet"
-pq.write_table(table, local_file_path)
+write(local_file_path, df)
 
 client = storage.Client.from_service_account_json(credentials_path[0])
 
-gcs_file_name = boat_name + yesterday_date + "telemetry_data.parquet"
+gcs_file_name = boat_name + "_" + yesterday_date + "telemetry_data.parquet"
 
 bucket = client.bucket(bucket_name)
 
