@@ -29,6 +29,7 @@ def main():
         file_path = "extracted_files/" + date.replace("-", "_") + "_" + "telemetry_data.parquet"
         if os.path.isfile(file_path):  # if already converted then next iteration.
             extraction_log_db.set_parquet_converted_true(date)
+            continue
         try:
             telemetry_results, col_names = get_telemetry(db_path)
         except ValueError:
@@ -36,6 +37,7 @@ def main():
         else:
             parquet_writer(telemetry_results, col_names, date)
             extraction_log_db.set_parquet_converted_true(date)
+            print(f"converted {date} successfully.")
     dates_to_upload = extraction_log_db.dates_to_upload()
     dates_to_upload = [item[0] for item in dates_to_upload]
     for date in dates_to_upload:
