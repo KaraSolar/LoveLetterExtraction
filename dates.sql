@@ -33,7 +33,7 @@ cross join numbers as d
 select
     date(c_date.extraction_date, '+' || series.numb || ' days') as extraction_date
 from series
-cross join (select date(current_date, '-20 days') as extraction_date) c_date
+cross join (select current_date as extraction_date) c_date
 )
 select
     row_number() over(order by extraction_date asc) as extraction_id
