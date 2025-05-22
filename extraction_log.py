@@ -12,7 +12,7 @@ class ExtractionLogDb:
             result = self.__cursor.execute('''SELECT extraction_date
                                 FROM extraction
                                 WHERE uploaded IS NULL
-                                AND extraction_date < CURRENT_DATE
+                                AND extraction_date < DATE('now', 'localtime')
                                 ;
                                 ''')
         except sqlite3.Error as exc:
